@@ -18,7 +18,18 @@ def generate_tone(frequency, duration, fs, waveform, volume):
         raise ValueError("Unsupported waveform: {}".format(waveform))
     return tone * volume
 
-    
+    def apply_filter(tone, filter_type, fs):
+        if filter_type == 'lowpass':
+           # Create a low-pass filter (Butterworth)
+           sos = signal.butter(4, 1000, 'lp', fs=fs, output='sos')
+        elif filter_type == 'highpass':
+            # Create a high-pass filter (Butterworth)
+            sos = signal.butter(4, 1000, 'hp', fs=fs, output='sos')
+        else:
+            return tone  # No filter applied
+        filtered_tone = signal.sosfiltfilt(sos, tone)  # Apply filter
+        return filtered_tone
+
 def main():
     fs = 44100 # Sample rate in Hz
     duration = 2.0 # Seconds
