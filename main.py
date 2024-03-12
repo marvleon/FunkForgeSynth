@@ -18,56 +18,73 @@ def generate_tone(frequency, duration, fs, waveform, volume):
         raise ValueError("Unsupported waveform: {}".format(waveform))
     return tone * volume
 
-    def apply_filter(tone, filter_type, fs):
-        if filter_type == 'lowpass':
-           # Create a low-pass filter (Butterworth)
-           sos = signal.butter(4, 1000, 'lp', fs=fs, output='sos')
-        elif filter_type == 'highpass':
-            # Create a high-pass filter (Butterworth)
-            sos = signal.butter(4, 1000, 'hp', fs=fs, output='sos')
-        else:
-            return tone  # No filter applied
-        filtered_tone = signal.sosfiltfilt(sos, tone)  # Apply filter
-        return filtered_tone
+def apply_filter(tone, filter_type, fs):
+    if filter_type == 'lowpass':
+        # Create a low-pass filter (Butterworth)
+        sos = signal.butter(4, 1000, 'lp', fs=fs, output='sos')
+    elif filter_type == 'highpass':
+        # Create a high-pass filter (Butterworth)
+        sos = signal.butter(4, 1000, 'hp', fs=fs, output='sos')
+    else:
+        return tone  # No filter applied
+    filtered_tone = signal.sosfiltfilt(sos, tone)  # Apply filter
+    return filtered_tone
+
+def play_tone(frequency, duration, fs, waveform='sine', volume=1.0, filter_type=None):
+    tone = generate_tone(frequency, duration, fs, waveform, volume)
+    if filter_type:
+        tone = apply_filter(tone, filter_type, fs)
+    sd.play(tone, fs)
+    sd.wait()
 
 def main():
-    fs = 44100 # Sample rate in Hz
-    duration = 2.0 # Seconds
+    fs = 44100  # Sample rate in Hz
+    duration = 2.0  # Seconds
     frequency = 440
     volume = 1.0
+    waveform = 'sine'  # Default waveform
+    filter_type = None  # Default filter
 
-    # Menu items
     while True:
-        print("\nSelect a waveform:")
-        print("1. Sine")
-        print("2. Square")
-        print("3. Sawtooth")
-        print("4. Change Volume")
+        print("\nMain Menu:")
+        print("1. Select Waveform")
+        print("2. Select Filter")
+        print("3. Change Volume")
+        print("4. Play Tone")
         print("5. Exit")
-        choice = input("Enter your choice (1-5): ")
+        main_choice = input("Enter your choice (1-5): ")
 
-        if choice in ['1', '2', '3']:
-            if choice == '1':
-                waveform = 'sine'
-            elif choice == '2':
-                waveform = 'square'
-            elif choice == '3':
-                waveform = 'sawtooth'
-            print(f"Playing a {duration} second {waveform} wave at {frequency} Hz with volume {volume}.")
-            tone = generate_tone(frequency, duration, fs, waveform, volume)
-            sd.play(tone, fs)
-            sd.wait()
-        elif choice == '4':
+        if main_choice == '1':
+            print("\nSelect a waveform:")
+            print("1. Sine")
+            print("2. Square")
+            print("3. Sawtooth")
+            waveform_choice = input("Enter your choice (1-3): ")
+            waveform = ['sine', 'square', 'sawtooth'][int(waveform_choice) - 1]
+
+        elif main_choice == '2':
+            print("\nSelect a filter (or none):")
+            print("1. None")
+            print("2. Lowpass")
+            print("3. Highpass")
+            filter_choice = input("Enter your choice (1-3): ")
+            filter_type = [None, 'lowpass', 'highpass'][int(filter_choice) - 1]
+
+        elif main_choice == '3':
             volume = float(input("Enter volume level (0.0 to 1.0): "))
-            volume = max(0.0, min(volume, 1.0)) 
+            volume = max(0.0, min(volume, 1.0))
             print(f"Volume set to {volume}.")
-        elif choice == '5':
+
+        elif main_choice == '4':
+            print(f"Playing a {duration} second {waveform} wave at {frequency} Hz with volume {volume} and {filter_type or 'no'} filter.")
+            play_tone(frequency, duration, fs, waveform, volume, filter_type)
+
+        elif main_choice == '5':
             print("Exiting.")
             break
+
         else:
             print("Invalid choice. Please try again.")
-
-
 
 if __name__ == "__main__":
     main()
