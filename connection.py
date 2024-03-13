@@ -1,7 +1,8 @@
 # Marvin Leon
-
 # Midi connection
 
+# pip install mido
+# pip install rt midi
 import mido
 import numpy as np
 import scipy.signal as signal
