@@ -34,10 +34,7 @@ class Menu:
     
     def play_tone(self):
         print("playing")
-        tone = generate_tone(frequency, duration, fs, waveform, volume)
-        tone = apply_filter(tone, filter_type, fs)
-        sd.play(tone, fs)
-        sd.wait()
+        self.synth.play_tone()
  
     def main_menu(self):
         while True:
@@ -63,45 +60,6 @@ class Menu:
             else:
                 print("Invalid choice. Please try again.")
         
-# Oscillator tone generator
-def generate_tone(frequency, duration, fs, waveform, volume):
-    t = np.linspace(0, duration, int(fs * duration), endpoint=False)
-    if waveform == 'sine':
-        tone = np.sin(2 * np.pi * frequency * t)
-    elif waveform == 'square':
-        tone = signal.square(2 * np.pi * frequency * t)
-    elif waveform == 'sawtooth':
-        tone = signal.sawtooth(2 * np.pi * frequency * t)
-    else:
-        raise ValueError("Unsupported waveform: {}".format(waveform))
-    return tone * volume
-
-def apply_filter(tone, filter_type, fs):
-    if filter_type == 'lowpass':
-        # Create a low-pass filter (Butterworth)
-        sos = signal.butter(4, 1000, 'lp', fs=fs, output='sos')
-    elif filter_type == 'highpass':
-        # Create a high-pass filter (Butterworth)
-        sos = signal.butter(4, 1000, 'hp', fs=fs, output='sos')
-    else:
-        return tone  # No filter applied
-    filtered_tone = signal.sosfiltfilt(sos, tone)  # Apply filter
-    return filtered_tone
-
-def play_tone(frequency, duration, fs, waveform='sine', volume=1.0, filter_type=None):
-    tone = generate_tone(frequency, duration, fs, waveform, volume)
-    if filter_type:
-        tone = apply_filter(tone, filter_type, fs)
-    sd.play(tone, fs)
-    sd.wait()
-
-def main():
-    fs = 44100  # Sample rate in Hz
-    duration = 2.0  # Seconds
-    frequency = 440
-    volume = 1.0
-    waveform = 'sine'  # Default waveform
-    filter_type = None  # Default filter
 
 pianoSynth = Synthesizer()
 synthMenu = Menu(pianoSynth)
