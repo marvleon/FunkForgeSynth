@@ -23,9 +23,9 @@ class Synthesizer:
         tone = self.generate_tone(self.frequency, self.fs, self.waveform, self.volume)
         if self.filter:
             tone = self.apply_filter(tone, self.filter, self.fs)
-        sd.play(tone, fs)
+        sd.play(tone, self.fs)
         sd.wait()
-    def generate_tone(frequency, fs, waveform, volume):
+    def generate_tone(self, frequency, fs, waveform, volume):
         t = np.linspace(0, 1, int(fs * 1), endpoint=False)
         if waveform == 'sine':
             tone = np.sin(2 * np.pi * frequency * t)
