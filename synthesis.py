@@ -3,11 +3,26 @@ import scipy.signal as signal
 import sounddevice as sd
 class Synthesizer:
     def __init__(self):
+        self.samplerate = 48000
+        self.blocksize = 512
+        self.sample_clock = 0
+        self.out_freq = None
         self.volume = 1.0 # default
         self.waveform = 'sine' # default
         self.filter = None
         self.frequency = 440
-        self.fs = 48000
+        self.output_stream = sd.OutputStream(samplerate=self.samplerate, channels=1, blocksize=self.blocksize, callback=self.output_callback)
+        self.output_stream.start()
+    def output_callback(self, out_data, frame_count, time_info, status):
+        if status:
+            print("Status", status)
+        if self.out_freq:
+            # output appropriate waveform
+            pass
+        else:
+            samples = np.zeros(frame_count, dtype=np.float32)
+        out_data[:] = np.reshape(samples, (frame_count, 1))
+        self.sample_clock += frame_count
     def play_key(self, key):
         pass
     def set_waveform(self, waveform):
@@ -20,10 +35,10 @@ class Synthesizer:
         self.volume = volume
         print(f"Volume set to {self.volume}.")
     def play_tone(self):
-        tone = self.generate_tone(self.frequency, self.fs, self.waveform, self.volume)
+        tone = self.generate_tone(self.frequency, self.samplerate, self.waveform, self.volume)
         if self.filter:
-            tone = self.apply_filter(tone, self.filter, self.fs)
-        sd.play(tone, self.fs)
+            tone = self.apply_filter(tone, self.filter, self.samplerate)
+        sd.play(tone, self.samplerate)
         sd.wait()
     def generate_tone(self, frequency, fs, waveform, volume):
         t = np.linspace(0, 1, int(fs * 1), endpoint=False)
@@ -47,5 +62,3 @@ class Synthesizer:
             return tone  # No filter applied
         filtered_tone = signal.sosfiltfilt(sos, tone)  # Apply filter
         return filtered_tone
-
-
