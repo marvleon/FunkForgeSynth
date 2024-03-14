@@ -14,3 +14,8 @@ class Synthesizer:
     def set_volume(self, volume):
         self.volume = volume
         print(f"Volume set to {self.volume}.")
+    def play_tone(self):
+        tone = generate_tone()
+    def generate_tone(self):
+        t = 
+
