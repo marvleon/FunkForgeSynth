@@ -10,23 +10,32 @@ import sounddevice as sd
 
 keyboard = mido.open_input('Digital Piano-1 0')
 
-def play_sound(note, velocity):
-    print(f'Note: {note}, Velocity: {velocity}')
-    samplerate = 48000
-    frequency = 440.0 * (2.0 ** ((note - 69) / 12.0))
-    wave = generate_sine_wave(frequency, velocity)
-    sd.play(wave, samplerate)
-    sd.wait()
+samplerate = 48000
+blocksize = 1024
+keyboard = mido.open_input('Digital Piano-1 0')
+sample_clock = 0
+out_freq = None
+out_note = None
+
+def output_callback(out_data, frame_count):
+	global sample_clock
+	# output wav adjusted by midi or nothing
+	if out_freq:
+		t = np.linspace(sample_clock / samplerate, (sample_clock + frame_count) / samplerate, frame_count)
+		out_data = np.sin(2 * np.pi * out_freq * t)
+	else:
+		out_data = np.zeros(frame_count)
+	sample_clock += frame_count
 
 
-def generate_sine_wave(frequency, velocity):
-    amplitude = velocity / 127
-    t = np.linspace(0, 1, int(48000), False)
-    wave = amplitude * np.sin(2*np.pi * frequency * t)
-    return wave
+output_stream = sounddevice.OutputStream(samplerate=samplerate, channels=1, blocksize=blocksize, callback=output_callback,)
+output_stream.start()
 
+def note_to_freq(note):
+    return 440.0 * (2.0 ** ((note - 69) / 12.0))
 
-def main():
+def connection():
+    global out_freq, out_note
     try:
         print('Waiting for MIDI messages from Piano. Press CTRL+C to exit.')
         for msg in keyboard:
@@ -36,6 +45,8 @@ def main():
                 note = msg.note
                 velocity = msg.velocity / 127
                 print(f'Note pressed: {note}, v: {velocity}')
+                out_note = note
+                out_freq = note_to_freq(note)
             
             # Play the sound using the synthesizer logic
                 play_sound(note, velocity)
@@ -47,9 +58,13 @@ def main():
                 note = msg.note
                 velocity = msg.velocity / 127
                 print(f'depressed: {note}, v: {velocity}')
+                if note == out_note:
+                    out_note = None
+                    out_freq = None 
+
 
                 pass
     except KeyboardInterrupt:
         print('Exiting...')
 
-main()
+connection()
