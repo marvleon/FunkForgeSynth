@@ -29,6 +29,11 @@ class Menu:
         print(f"Volume set to {self.volume}.")
     def play_tone(self):
         print("playing")
+        tone = generate_tone(frequency, duration, fs, waveform, volume)
+        tone = apply_filter(tone, filter_type, fs)
+        sd.play(tone, fs)
+        sd.wait()
+
     def main_menu(self):
         while True:
             print("\nMain Menu:")
@@ -134,5 +139,5 @@ def main():
         else:
             print("Invalid choice. Please try again.")
 
-if __name__ == "__main__":
-    main()
+synthMenu = Menu()
+synthMenu.main_menu()
