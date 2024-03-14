@@ -10,7 +10,7 @@ import sounddevice as sd
 
 #print(mido.get_input_names())
 
-inport = mido.open_input('Digital Piano-1 0')
+keyboard = mido.open_input('Digital Piano-1 0')
 
 def play_sound(note, velocity):
     print(f'Note: {note}, Velocity: {velocity}')
@@ -31,7 +31,7 @@ def generate_sine_wave(frequency, velocity):
 def main():
     try:
         print('Waiting for MIDI messages from Piano. Press CTRL+C to exit.')
-        for msg in inport:
+        for msg in keyboard:
             if msg.type == 'note_on':
             # Extract the note and velocity from the MIDI message
                 note = msg.note
