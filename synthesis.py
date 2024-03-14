@@ -1,3 +1,4 @@
+import numpy as np
 class Synthesizer:
     def __init__(self):
         self.volume = 1.0 # default

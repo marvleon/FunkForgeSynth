@@ -1,6 +1,8 @@
 # Marvin Leon
 # CS 410 Final
-
+import numpy as np
+import scipy.signal as signal
+import sounddevice as sd
 from synthesis import Synthesizer
 
 class Menu:
