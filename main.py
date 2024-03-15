@@ -7,9 +7,8 @@ from synthesis import Synthesizer
 from connection import MidiConnection
 
 class Menu:
-    def __init__(self, synthesizer, midi):
+    def __init__(self, synthesizer):
         self.synth = synthesizer
-        self.midi = midi
 
     def select_waveform(self):
         print("\nSelect a waveform:")
@@ -37,6 +36,12 @@ class Menu:
     def play_tone(self):
         print("playing")
         self.synth.play_tone()
+    
+    def start_midi(self):
+        currentSynth = self.synth
+        midi = MidiConnection(currentSynth)
+
+
  
     def main_menu(self):
         while True:
@@ -58,6 +63,7 @@ class Menu:
             elif main_choice == '4':
                 self.play_tone()
             elif main_choice == '5':
+                self.start_midi()
                 pass
             elif main_choice == '6':
                 print("Exiting.")
@@ -67,6 +73,5 @@ class Menu:
         
 
 pianoSynth = Synthesizer()
-midi = MidiConnection()
-synthMenu = Menu(pianoSynth, midi)
+synthMenu = Menu(pianoSynth)
 synthMenu.main_menu()
