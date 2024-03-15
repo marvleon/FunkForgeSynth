@@ -7,12 +7,12 @@ class Synthesizer:
         self.blocksize = 512
         self.sample_clock = 0
         self.out_freq = None
+        self.out_note = None
         self.volume = 1.0 # default
         self.waveform = 'sine' # default
         self.filter = None
         self.frequency = 440
         self.output_stream = sd.OutputStream(samplerate=self.samplerate, channels=1, blocksize=self.blocksize, callback=self.output_callback)
-        self.output_stream.start()
     def output_callback(self, out_data, frame_count, time_info, status):
         if status:
             print("Status", status)
@@ -23,13 +23,20 @@ class Synthesizer:
             samples = np.zeros(frame_count, dtype=np.float32)
         out_data[:] = np.reshape(samples, (frame_count, 1))
         self.sample_clock += frame_count
+    def start_stream(self):
+        self.output_stream.start()
     def note_to_freq(self, note):
         return 440.0 * (2.0 ** ((note - 69) / 12.0))
-    def stop_note(self):
-        self.out_freq = None
+    def stop_note(self, note_to_compare):
+        if note_to_compare == self.out_note:
+            self.out_freq = None
+            self.out_note = None
     def play_note(self, note, waveform):
         self.out_freq = self.note_to_freq(note)
+        self.out_note = note
         self.waveform = waveform
+    
+    
     def play_key(self, key):
         pass
     def set_waveform(self, waveform):
