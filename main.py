@@ -40,6 +40,7 @@ class Menu:
     def start_midi(self):
         currentSynth = self.synth
         midi = MidiConnection(currentSynth)
+        midi.run()
 
 
  
