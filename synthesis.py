@@ -8,6 +8,7 @@ class Synthesizer:
         self.sample_clock = 0
         self.out_freq = None
         self.out_note = None
+        self.active_notes = {}
         self.volume = 1.0 # default
         self.waveform = 'sine' # default
         self.filter = None
@@ -16,12 +17,22 @@ class Synthesizer:
     def output_callback(self, out_data, frame_count, time_info, status):
         if status:
             print("Status", status)
-        if self.out_freq:
-            t = np.linspace(self.sample_clock / self.samplerate, (self.sample_clock + frame_count) / self.samplerate, frame_count)
-            samples = np.sin(2 * np.pi * self.out_freq * t, dtype=np.float32)
-            pass
-        else:
-            samples = np.zeros(frame_count, dtype=np.float32)
+        t = np.linspace(self.sample_clock / self.samplerate, (self.sample_clock + frame_count) / self.samplerate, frame_count)
+        samples = np.zeros(frame_count, dtype=np.float32)
+
+        # Attempting thread safety
+        active_notes_snapshot = self.active_notes.copy()
+
+        for note, info in active_notes_snapshot.items():
+            samples += self.generate_waveform(info['frequency'], info['waveform'], t)
+            # Check if there are active notes
+            if active_notes_snapshot:
+                # if there are active notes, normalize samples by the number of active notes and clip the values
+                samples = samples / len(active_notes_snapshot)
+                samples = np.clip(samples, -1, 1)
+            else:
+                # no active notes, leave samples unchanged
+                samples = samples 
         out_data[:] = np.reshape(samples, (frame_count, 1))
         self.sample_clock += frame_count
     def start_stream(self):
@@ -32,12 +43,23 @@ class Synthesizer:
         if note_to_compare == self.out_note:
             self.out_freq = None
             self.out_note = None
+        if note_to_compare in self.active_notes:
+            del self.active_notes[note_to_compare] 
+            
     def play_note(self, note):
         self.out_freq = self.note_to_freq(note)
         self.out_note = note
+        self.active_notes[note] = {'frequency': self.out_freq, 'waveform': self.waveform}
+
+    def generate_waveform(self, frequency, waveform, t):
+        if waveform == 'sine':
+            return np.sin(2 * np.pi * frequency * t, dtype=np.float32)
+        elif waveform == 'square':
+            return signal.square(2 * np.pi * frequency * t)
+        elif waveform == 'sawtooth':
+            return signal.sawtooth(2 * np.pi * frequency * t)
+        return np.zeros_like(t, dtype=np.float32)
     
-    def play_key(self, key):
-        pass
     def set_waveform(self, waveform):
         self.waveform = waveform
         print(f"Waveform set to {self.waveform}")
