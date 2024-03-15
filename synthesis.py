@@ -17,7 +17,8 @@ class Synthesizer:
         if status:
             print("Status", status)
         if self.out_freq:
-            # output appropriate waveform
+            t = np.linspace(self.sample_clock / self.samplerate, (self.sample_clock + frame_count) / self.samplerate, frame_count)
+            samples = np.sin(2 * np.pi * self.out_freq * t, dtype=np.float32)
             pass
         else:
             samples = np.zeros(frame_count, dtype=np.float32)
@@ -31,11 +32,9 @@ class Synthesizer:
         if note_to_compare == self.out_note:
             self.out_freq = None
             self.out_note = None
-    def play_note(self, note, waveform):
+    def play_note(self, note):
         self.out_freq = self.note_to_freq(note)
         self.out_note = note
-        self.waveform = waveform
-    
     
     def play_key(self, key):
         pass
