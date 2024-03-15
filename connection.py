@@ -10,7 +10,6 @@ class MidiConnection:
     def __init__(self, synthesizer):
         self.keyboard = self.get_midi()
         self.synth = synthesizer
-        self.run()
     def get_midi(self):
         input_names = mido.get_input_names()
         if input_names:
