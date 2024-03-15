@@ -23,6 +23,13 @@ class Synthesizer:
             samples = np.zeros(frame_count, dtype=np.float32)
         out_data[:] = np.reshape(samples, (frame_count, 1))
         self.sample_clock += frame_count
+    def note_to_freq(self, note):
+        return 440.0 * (2.0 ** ((note - 69) / 12.0))
+    def stop_note(self):
+        self.out_freq = None
+    def play_note(self, note, waveform):
+        self.out_freq = self.note_to_freq(note)
+        self.waveform = waveform
     def play_key(self, key):
         pass
     def set_waveform(self, waveform):
