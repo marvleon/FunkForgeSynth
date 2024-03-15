@@ -4,10 +4,12 @@ import numpy as np
 import scipy.signal as signal
 import sounddevice as sd
 from synthesis import Synthesizer
+from connection import MidiConnection
 
 class Menu:
-    def __init__(self, synthesizer):
+    def __init__(self, synthesizer, midi):
         self.synth = synthesizer
+        self.midi = midi
 
     def select_waveform(self):
         print("\nSelect a waveform:")
@@ -43,7 +45,8 @@ class Menu:
             print("2. Select Filter")
             print("3. Change Volume")
             print("4. Play Tone")
-            print("5. Exit")
+            print("5. Play Midi")
+            print("6. Exit")
             main_choice = input("Enter your choice (1-5): ")
 
             if main_choice == '1':
@@ -55,6 +58,8 @@ class Menu:
             elif main_choice == '4':
                 self.play_tone()
             elif main_choice == '5':
+                pass
+            elif main_choice == '6':
                 print("Exiting.")
                 break
             else:
@@ -62,5 +67,6 @@ class Menu:
         
 
 pianoSynth = Synthesizer()
-synthMenu = Menu(pianoSynth)
+midi = MidiConnection()
+synthMenu = Menu(pianoSynth, midi)
 synthMenu.main_menu()
