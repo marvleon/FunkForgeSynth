@@ -3,12 +3,14 @@ import scipy.signal as signal
 import sounddevice as sd
 
 class Note:
-    def __init__(self, frequency, waveform, start_time):
-        self.frequency = frequency
-        self.waveform = waveform
-        self.start_time = start_time
-        self.release_time = None
-        self.adsr = (0.01, 0.1, 0.7, 0.2)  # Example ADSR values: Attack, Decay, Sustain, Release
+    def __init__(self, note, start_time):
+        self.note = note
+        self.frequency = self.note_to_freq(note)
+        self.start_time = start_time  # Time when the note was started
+
+    @staticmethod
+    def note_to_freq(note):
+        return 440.0 * (2.0 ** ((note - 69) / 12.0))
 
     def calculate_adsr_amplitude(self, current_time):
         attack, decay, sustain, release = self.adsr
