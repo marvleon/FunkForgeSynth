@@ -34,8 +34,6 @@ class Synthesizer:
         self.samplerate = 48000
         self.blocksize = 512
         self.sample_clock = 0
-        self.out_freq = None
-        self.out_note = None
         self.active_notes = []
         self.volume = 1.0 # default
         self.waveform = 'sine' # default
