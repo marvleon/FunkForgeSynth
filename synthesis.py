@@ -1,6 +1,36 @@
 import numpy as np
 import scipy.signal as signal
 import sounddevice as sd
+
+class Note:
+    def __init__(self, frequency, waveform, start_time):
+        self.frequency = frequency
+        self.waveform = waveform
+        self.start_time = start_time
+        self.release_time = None
+        self.adsr = (0.01, 0.1, 0.7, 0.2)  # Example ADSR values: Attack, Decay, Sustain, Release
+
+    def calculate_adsr_amplitude(self, current_time):
+        attack, decay, sustain, release = self.adsr
+        elapsed_time = current_time - self.start_time
+
+        if self.release_time is not None:
+            release_elapsed = current_time - self.release_time
+            if release_elapsed > release:
+                return 0  # Note has finished releasing
+            return sustain * (1 - (release_elapsed / release))
+
+        if elapsed_time < attack:
+            return (elapsed_time / attack) * sustain
+        elif elapsed_time < (attack + decay):
+            return ((1 - ((elapsed_time - attack) / decay)) * (1 - sustain)) + sustain
+        else:
+            return sustain
+
+    def release(self, current_time):
+        self.release_time = current_time
+
+
 class Synthesizer:
     def __init__(self):
         self.samplerate = 48000
