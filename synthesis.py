@@ -3,29 +3,35 @@ import scipy.signal as signal
 import sounddevice as sd
 
 class Note:
+    # initialize a note object with given parameters
     def __init__(self, note, start_time, attack_time, release_time):
-        self.note = note
-        self.frequency = self.note_to_freq(note)
-        self.start_time = start_time
-        self.attack_time = attack_time
-        self.release_time = release_time
-        self.release_start = None
-        self.is_releasing = False
+        self.note = note # MIDI key number
+        self.frequency = self.note_to_freq(note) # note frequency given a MIDI key
+        self.start_time = start_time # time when the note starts playing
+        self.attack_time = attack_time # time it takes for note to reach full volume
+        self.release_time = release_time # time it takes for note to fade after release
+        self.release_start = None # time when the note starts to release 
+        self.is_releasing = False # boolean flag to indicate if note is in the release phase
 
 
     @staticmethod
     def note_to_freq(note):
+        # convert keyboard number to its frequency in Hz
         return 440.0 * (2.0 ** ((note - 69) / 12.0))
 
+    # method marks note as releasing and record the start time
     def start_release(self, release_time):
-        self.release_start = release_time
-        self.is_releasing = True
+        self.release_start = release_time # set the time when the note begins to release
+        self.is_releasing = True # set the flag to indicate releasing
 
+    # method calculates amplitude of the note based on current time and attack/release state
     def get_amplitude(self, current_time):
+        # if note is releasing, calculate release phase amplitude
         if self.is_releasing and self.release_start is not None:
             release_phase = (current_time - self.release_start) / self.release_time
             return max(0, 1 - release_phase)  # Ensure amplitude doesn't go below 0
         else:
+        # note is not releasing yet, calculate the attack phase amplitude
             attack_phase = (current_time - self.start_time) / self.attack_time
             return min(1, attack_phase)  # Ensure amplitude doesn't go above 1
 
