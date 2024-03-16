@@ -36,48 +36,42 @@ class Synthesizer:
         self.sample_clock = 0
         self.out_freq = None
         self.out_note = None
-        self.active_notes = {}
+        self.active_notes = []
         self.volume = 1.0 # default
         self.waveform = 'sine' # default
+        self.attack_time = 0.05
+        self.release_time = 0.1
         self.filter = None
         self.frequency = 440
         self.output_stream = sd.OutputStream(samplerate=self.samplerate, channels=1, blocksize=self.blocksize, callback=self.output_callback)
     def output_callback(self, out_data, frame_count, time_info, status):
         if status:
             print("Status", status)
-        t = np.linspace(self.sample_clock / self.samplerate, (self.sample_clock + frame_count) / self.samplerate, frame_count)
+        current_time = self.sample_clock / self.samplerate
         samples = np.zeros(frame_count, dtype=np.float32)
-
-        # Attempting thread safety
-        active_notes_snapshot = self.active_notes.copy()
-
-        for note, info in active_notes_snapshot.items():
-            samples += self.generate_waveform(info['frequency'], info['waveform'], t)
-            # Check if there are active notes
-            if active_notes_snapshot:
-                # if there are active notes, normalize samples by the number of active notes and clip the values
-                samples = samples / len(active_notes_snapshot)
-                samples = np.clip(samples, -1, 1)
+        for note in list(self.active_notes):  # Use a copy of the list to allow modification during iteration
+            t = np.linspace(current_time, current_time + frame_count / self.samplerate, frame_count)
+            amplitude = note.get_amplitude(current_time)
+            if note.is_releasing and current_time - note.release_start >= note.release_time:
+                self.active_notes.remove(note)
             else:
-                # no active notes, leave samples unchanged
-                samples = samples 
+                samples += amplitude * np.sin(2 * np.pi * note.frequency * t)
+        samples *= self.volume / max(len(self.active_notes), 1)
         out_data[:] = np.reshape(samples, (frame_count, 1))
         self.sample_clock += frame_count
     def start_stream(self):
         self.output_stream.start()
     def note_to_freq(self, note):
         return 440.0 * (2.0 ** ((note - 69) / 12.0))
-    def stop_note(self, note_to_compare):
-        if note_to_compare == self.out_note:
-            self.out_freq = None
-            self.out_note = None
-        if note_to_compare in self.active_notes:
-            del self.active_notes[note_to_compare] 
+    def stop_note(self, note):
+        current_time = self.sample_clock / self.samplerate
+        for n in self.active_notes:
+            if n.note == note and not n.is_releasing:
+                n.start_release(current_time)
             
-    def play_note(self, note):
-        self.out_freq = self.note_to_freq(note)
-        self.out_note = note
-        self.active_notes[note] = {'frequency': self.out_freq, 'waveform': self.waveform}
+    def play_note(self, midi_key):
+        new_note = Note(midi_key, self.sample_clock / self.samplerate, self.attack_time, self.release_time)
+        self.active_notes.append(new_note)
 
     def generate_waveform(self, frequency, waveform, t):
         if waveform == 'sine':
