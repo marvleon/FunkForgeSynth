@@ -3,35 +3,31 @@ import scipy.signal as signal
 import sounddevice as sd
 
 class Note:
-    def __init__(self, note, start_time):
+    def __init__(self, note, start_time, attack_time, release_time):
         self.note = note
         self.frequency = self.note_to_freq(note)
-        self.start_time = start_time  # Time when the note was started
+        self.start_time = start_time
+        self.attack_time = attack_time
+        self.release_time = release_time
+        self.release_start = None
+        self.is_releasing = False
+
 
     @staticmethod
     def note_to_freq(note):
         return 440.0 * (2.0 ** ((note - 69) / 12.0))
 
-    def calculate_adsr_amplitude(self, current_time):
-        attack, decay, sustain, release = self.adsr
-        elapsed_time = current_time - self.start_time
+    def start_release(self, release_time):
+        self.release_start = release_time
+        self.is_releasing = True
 
-        if self.release_time is not None:
-            release_elapsed = current_time - self.release_time
-            if release_elapsed > release:
-                return 0  # Note has finished releasing
-            return sustain * (1 - (release_elapsed / release))
-
-        if elapsed_time < attack:
-            return (elapsed_time / attack) * sustain
-        elif elapsed_time < (attack + decay):
-            return ((1 - ((elapsed_time - attack) / decay)) * (1 - sustain)) + sustain
+    def get_amplitude(self, current_time):
+        if self.is_releasing and self.release_start is not None:
+            release_phase = (current_time - self.release_start) / self.release_time
+            return max(0, 1 - release_phase)  # Ensure amplitude doesn't go below 0
         else:
-            return sustain
-
-    def release(self, current_time):
-        self.release_time = current_time
-
+            attack_phase = (current_time - self.start_time) / self.attack_time
+            return min(1, attack_phase)  # Ensure amplitude doesn't go above 1
 
 class Synthesizer:
     def __init__(self):
