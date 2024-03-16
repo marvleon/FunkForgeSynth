@@ -67,7 +67,8 @@ class Synthesizer:
                 self.active_notes.remove(note)
             else:
                 # otherwise add the note's samples to the output buffer
-                samples += amplitude * np.sin(2 * np.pi * note.frequency * t)
+                samples = samples + self.generate_samples(note.frequency, t, amplitude)
+                # samples += amplitude * np.sin(2 * np.pi * note.frequency * t)
 
         # scale the samples by the volume and average them if there are multiple notes 
         samples *= self.volume / max(len(self.active_notes), 1)
@@ -94,7 +95,16 @@ class Synthesizer:
     def play_note(self, midi_key):
         new_note = Note(midi_key, self.sample_clock / self.samplerate, self.attack_time, self.release_time)
         self.active_notes.append(new_note)
-
+    
+    def generate_samples(self, frequency, t, amplitude):
+        if self.waveform == 'sine':
+            samples = np.sin(2 * np.pi * frequency * t)
+        elif self.waveform == 'square':
+            return signal.square(2 * np.pi * frequency * t)
+        elif self.waveform == 'sawtooth':
+            return signal.sawtooth(2 * np.pi * frequency * t)
+        return amplitude * samples
+    
     # method to generate respective waveform parameter
     def generate_waveform(self, frequency, waveform, t):
         if waveform == 'sine':
