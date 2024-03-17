@@ -49,8 +49,14 @@ class Synthesizer:
         self.filter = None # filter type
         self.frequency = 440 # default A4 note
         # setup output stream to play synthesized sound
-        self.output_stream = sd.OutputStream(samplerate=self.samplerate, channels=1, blocksize=self.blocksize, callback=self.output_callback)
-    
+        #self.output_stream = sd.OutputStream(samplerate=self.samplerate, channels=1, blocksize=self.blocksize, callback=self.output_callback)
+        self.output_stream = None
+        self.initialize_stream()
+
+    def initialize_stream(self):
+        if self.output_stream is not None:
+            self.output_stream.close()
+        self.output_stream = sd.OutputStream(samplerate=self.samplerate, channels=1, blocksize=self.blocksize, callback=self.output_callback)  
     # Method fetches new samples to play
     def output_callback(self, out_data, frame_count, time_info, status):
         if status:
@@ -78,7 +84,18 @@ class Synthesizer:
 
    # method to start the output stream 
     def start_stream(self):
+        if self.output_stream is None:
+            self.initialize_stream()
         self.output_stream.start()
+        #self.output_stream.start()
+
+    def stop_stream(self):
+        if self.output_stream is not None:
+            self.output_stream.stop()
+            self.output_stream.close()
+            self.output_stream = None
+        print('stoping stream')
+        print('closing stream')
 
    #helper method to convert midi key to frequency 
     def note_to_freq(self, note):
@@ -100,9 +117,9 @@ class Synthesizer:
         if self.waveform == 'sine':
             samples = np.sin(2 * np.pi * frequency * t)
         elif self.waveform == 'square':
-            return signal.square(2 * np.pi * frequency * t)
+            samples = signal.square(2 * np.pi * frequency * t)
         elif self.waveform == 'sawtooth':
-            return signal.sawtooth(2 * np.pi * frequency * t)
+            samples = signal.sawtooth(2 * np.pi * frequency * t)
         return amplitude * samples
     
     # method to generate respective waveform parameter

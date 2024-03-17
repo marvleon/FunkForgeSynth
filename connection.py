@@ -43,4 +43,6 @@ class MidiConnection:
                     note = msg.note
                     self.synth.stop_note(note)
         except KeyboardInterrupt:
+            self.synth.stop_stream()
+            self.keyboard.close()
             print('Exiting...')
