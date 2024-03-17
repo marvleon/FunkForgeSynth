@@ -123,8 +123,8 @@ class Synthesizer:
             samples = signal.square(2 * np.pi * frequency * t)
         elif self.waveform == 'sawtooth':
             samples = signal.sawtooth(2 * np.pi * frequency * t)
-        elif self.waveform == 'file':
-            self.gen_from_file(frequency, t)
+        elif self.waveform == 'input.wav':
+            samples = self.gen_from_file(frequency, t)
         # apply filter
         if self.filter:
             samples = self.apply_filter(samples, self.filter, self.samplerate)
@@ -175,6 +175,8 @@ class Synthesizer:
             return signal.square(2 * np.pi * frequency * t)
         elif waveform == 'sawtooth':
             return signal.sawtooth(2 * np.pi * frequency * t)
+        elif waveform == 'input.wav':
+            return self.gen_from_file(frequency, t)
         return np.zeros_like(t, dtype=np.float32)
     
     # setter method to set waveform
@@ -194,15 +196,11 @@ class Synthesizer:
 
     # setter method to play test tone in main menu 
     def play_tone(self):
-        t = np.linspace(0, 0.8, int(48000 * 1), endpoint=False)
-        tone = self.gen_from_file(550, t)
+        tone = self.generate_tone(self.frequency, self.samplerate, self.waveform, self.volume)
+        if self.filter:
+            tone = self.apply_filter(tone, self.filter, self.samplerate)
         sd.play(tone, self.samplerate)
         sd.wait()
-    #    tone = self.generate_tone(self.frequency, self.samplerate, self.waveform, self.volume)
-    #    if self.filter:
-    #        tone = self.apply_filter(tone, self.filter, self.samplerate)
-    #    sd.play(tone, self.samplerate)
-    #    sd.wait()
 
     # method to generate tone in main menu
     def generate_tone(self, frequency, fs, waveform, volume):
@@ -213,6 +211,8 @@ class Synthesizer:
             tone = signal.square(2 * np.pi * frequency * t)
         elif waveform == 'sawtooth':
             tone = signal.sawtooth(2 * np.pi * frequency * t)
+        elif waveform == 'input.wav':
+            tone = self.gen_from_file(frequency, t)
         else:
             raise ValueError("Unsupported waveform: {}".format(waveform))
         return tone * volume
