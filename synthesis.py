@@ -120,6 +120,9 @@ class Synthesizer:
             samples = signal.square(2 * np.pi * frequency * t)
         elif self.waveform == 'sawtooth':
             samples = signal.sawtooth(2 * np.pi * frequency * t)
+        # apply filter
+        if self.filter:
+            samples = self.apply_filter(samples, self.filter, self.samplerate)
         return amplitude * samples
     
     # method to generate respective waveform parameter
@@ -169,14 +172,16 @@ class Synthesizer:
         return tone * volume
     
     # method to apply filter to ton  
-    def apply_filter(tone, filter_type, fs):
+    def apply_filter(self, samples, filter_type, fs):
         if filter_type == 'lowpass':
             # Create a low-pass filter (Butterworth)
-            sos = signal.butter(4, 1000, 'lp', fs=fs, output='sos')
+            sos = signal.iirfilter(N=4, Wn=4000/(fs/2), btype='low', ftype='butter', output='sos')
+            filtered_samples = signal.sosfilt(sos, samples)
         elif filter_type == 'highpass':
             # Create a high-pass filter (Butterworth)
-            sos = signal.butter(4, 1000, 'hp', fs=fs, output='sos')
+            sos = signal.iirfilter(N=4, Wn=4000/(fs/2), btype='high', ftype='butter', output='sos')
+            filtered_samples = signal.sosfilt(sos, samples)
         else:
-            return tone  # No filter applied
-        filtered_tone = signal.sosfiltfilt(sos, tone)  # Apply filter
-        return filtered_tone
+            return samples # No filter applied
+        filtered_samples = signal.sosfilt(sos,samples)
+        return filtered_samples
