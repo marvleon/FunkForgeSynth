@@ -1,6 +1,9 @@
 import numpy as np
 import scipy.signal as signal
 import sounddevice as sd
+import warnings
+from scipy.io import wavfile
+from scipy.interpolate import interp1d
 
 class Note:
     # initialize a note object with given parameters
@@ -120,10 +123,49 @@ class Synthesizer:
             samples = signal.square(2 * np.pi * frequency * t)
         elif self.waveform == 'sawtooth':
             samples = signal.sawtooth(2 * np.pi * frequency * t)
+        elif self.waveform == 'file':
+            self.gen_from_file(frequency, t)
         # apply filter
         if self.filter:
             samples = self.apply_filter(samples, self.filter, self.samplerate)
         return amplitude * samples
+    
+    def gen_from_file(self, frequency, t):
+        # load the wav file
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", wavfile.WavFileWarning)
+            samplerate, data = wavfile.read('input.wav')
+
+        # ensure the samplerate is 48000 and the file is mono
+        if samplerate != 48000 or len(data.shape) != 1:
+            raise ValueError("The WAV file must be mono and have a samplerate of 48000 Hz")
+
+        # create a time array for the original data
+        original_time = np.linspace(0, len(data) / samplerate, num=len(data))
+
+        # interpolate to match the length of t
+        interpolator = interp1d(original_time, data, kind='linear')
+
+        # stretch or compress the waveform to match the requested frequency
+        # calculate the time period of one cycle of the requested frequency
+        period = 1 / frequency
+
+        # calculate the number of samples in one period of the original data
+        samples_in_period = period * samplerate
+
+        # create a new time array for one period of the requested frequency
+        period_time = np.linspace(0, period, num=int(samples_in_period))
+
+        # use the interpolator to generate the samples for one period
+        period_samples = interpolator(period_time)
+
+        # repeat the period samples to fill the entire duration t
+        samples = np.tile(period_samples, int(np.ceil(t[-1] / period)))
+
+        # trim the samples to match the exact length of t
+        samples = samples[:len(t)]
+
+        return samples
     
     # method to generate respective waveform parameter
     def generate_waveform(self, frequency, waveform, t):
@@ -152,11 +194,15 @@ class Synthesizer:
 
     # setter method to play test tone in main menu 
     def play_tone(self):
-        tone = self.generate_tone(self.frequency, self.samplerate, self.waveform, self.volume)
-        if self.filter:
-            tone = self.apply_filter(tone, self.filter, self.samplerate)
+        t = np.linspace(0, 0.8, int(48000 * 1), endpoint=False)
+        tone = self.gen_from_file(550, t)
         sd.play(tone, self.samplerate)
         sd.wait()
+    #    tone = self.generate_tone(self.frequency, self.samplerate, self.waveform, self.volume)
+    #    if self.filter:
+    #        tone = self.apply_filter(tone, self.filter, self.samplerate)
+    #    sd.play(tone, self.samplerate)
+    #    sd.wait()
 
     # method to generate tone in main menu
     def generate_tone(self, frequency, fs, waveform, volume):

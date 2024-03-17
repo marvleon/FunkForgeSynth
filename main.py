@@ -15,8 +15,9 @@ class Menu:
         print("1. Sine")
         print("2. Square")
         print("3. Sawtooth")
-        waveform_choice = input("Enter your choice (1-3): ")
-        wave = ['sine', 'square', 'sawtooth'][int(waveform_choice) - 1]
+        print("4. File input")
+        waveform_choice = input("Enter your choice (1-4): ")
+        wave = ['sine', 'square', 'sawtooth', 'input.wav'][int(waveform_choice) - 1]
         self.synth.set_waveform(wave)
     
     def select_filter(self):
