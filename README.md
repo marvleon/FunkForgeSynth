@@ -74,8 +74,6 @@ Overall, this is a project I feel proud of and I like to show my roommates what 
 - Searches for active midi devices and retrieves their name for Mido connection.
 - Method run() actively waits for midi messages and sends the key/note value through to an instance of the synthesizer class for audio playback
 
-# How
-
 # Issues of Concern
 
 ## Sound Complexity
