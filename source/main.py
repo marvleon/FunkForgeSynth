@@ -73,7 +73,3 @@ class Menu:
             else:
                 print("Invalid choice. Please try again.")
         
-
-pianoSynth = Synthesizer()
-synthMenu = Menu(pianoSynth)
-synthMenu.main_menu()
